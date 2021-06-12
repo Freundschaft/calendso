@@ -50,9 +50,9 @@ export default function Shell(props) {
                                             <Link href="/">
                                                 <a className={router.pathname == "/" ? "bg-blue-500 transition-colors duration-300 ease-in-out text-white px-3 py-2 rounded-md text-sm font-medium" : "text-white hover:bg-blue-500 transition-colors duration-300 ease-in-out hover:text-white px-3 py-2 rounded-md text-sm font-medium"}>Dashboard</a>
                                             </Link>
-                                            {/* <Link href="/">
+                                            <Link href="/bookings">
                                                 <a className={router.pathname.startsWith("/bookings") ? "bg-blue-500 transition-colors duration-300 ease-in-out text-white px-3 py-2 rounded-md text-sm font-medium" : "text-white hover:bg-blue-500 transition-colors duration-300 ease-in-out hover:text-white px-3 py-2 rounded-md text-sm font-medium"}>Bookings</a>
-                                            </Link> */}
+                                            </Link>
                                             <Link href="/availability">
                                                 <a className={router.pathname.startsWith("/availability") ? "bg-blue-500 transition-colors duration-300 ease-in-out text-white px-3 py-2 rounded-md text-sm font-medium" : "text-white hover:bg-blue-500 transition-colors duration-300 ease-in-out hover:text-white px-3 py-2 rounded-md text-sm font-medium"}>Availability</a>
                                             </Link>
