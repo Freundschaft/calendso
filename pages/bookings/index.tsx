@@ -55,7 +55,7 @@ export default function Booking(props) {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {booking.attendees.email}
                                                 {booking.attendees.map((booking) =>
-                                                    <span>{booking.email}</span>
+                                                    <span>{booking.email}, </span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
