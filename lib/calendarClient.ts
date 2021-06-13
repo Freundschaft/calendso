@@ -204,6 +204,7 @@ const InternalCalendar = (credential): CalendarApiAdapter => {
                 end: booking.endTime,
                 eventType: booking.eventType,
                 attendees: booking.attendees,
+                slotBookingId: booking.id,
             }))
         },
         createEvent: async (event: CalendarEvent) => {

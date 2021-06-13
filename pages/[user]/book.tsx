@@ -19,7 +19,7 @@ dayjs.extend(timezone);
 
 export default function Book(props) {
     const router = useRouter();
-    const { date, user, rescheduleUid } = router.query;
+    const { date, user, rescheduleUid, slotBookingId } = router.query;
 
     const [ is24h, setIs24h ] = useState(false);
     const [ preferredTimeZone, setPreferredTimeZone ] = useState('');
@@ -57,7 +57,8 @@ export default function Book(props) {
             notes: event.target.notes.value,
             timeZone: preferredTimeZone,
             eventName: props.eventType.title,
-            rescheduleUid: rescheduleUid
+            rescheduleUid: rescheduleUid,
+            slotBookingId: slotBookingId,
         };
 
         if (selectedLocation) {
