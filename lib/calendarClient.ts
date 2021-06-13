@@ -195,11 +195,14 @@ const InternalCalendar = (credential): CalendarApiAdapter => {
                     startTime: true,
                     endTime: true,
                     attendees: true,
+                    eventType: true,
                 }
             });
             return bookings.map((booking) => ({
                 start: booking.startTime,
-                end: booking.endTime
+                end: booking.endTime,
+                eventType: booking.eventType,
+                attendees: booking.attendees,
             }))
         },
         createEvent: async (event: CalendarEvent) => {

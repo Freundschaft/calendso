@@ -139,7 +139,7 @@ export default function Type(props) {
         </button>
     )];
 
-    const times = useMemo(() =>
+    const slots = useMemo(() =>
             getSlots({
                 calendarTimeZone: props.user.timeZone,
                 selectedTimeZone: selectedTimeZone,
@@ -151,43 +151,56 @@ export default function Type(props) {
         , [selectedDate, selectedTimeZone, busy]);
 
     // Check for conflicts
-    for (let i = times.length - 1; i >= 0; i -= 1) {
+    for (let i = slots.length - 1; i >= 0; i -= 1) {
         busy.forEach(busyTime => {
             let startTime = dayjs(busyTime.start);
             let endTime = dayjs(busyTime.end);
 
+            let slotBlocked = false;
             // Check if start times are the same
-            if (dayjs(times[i]).format('HH:mm') == startTime.format('HH:mm')) {
-                times.splice(i, 1);
+            if (dayjs(slots[i].time).format('HH:mm') == startTime.format('HH:mm')) {
+                slotBlocked = true;
             }
 
             // Check if time is between start and end times
-            if (dayjs(times[i]).isBetween(startTime, endTime)) {
-                times.splice(i, 1);
+            if (dayjs(slots[i].time).isBetween(startTime, endTime)) {
+                slotBlocked = true;
             }
 
             // Check if slot end time is between start and end time
-            if (dayjs(times[i]).add(props.eventType.length, 'minutes').isBetween(startTime, endTime)) {
-                times.splice(i, 1);
+            if (dayjs(slots[i].time).add(props.eventType.length, 'minutes').isBetween(startTime, endTime)) {
+                slotBlocked = true;
             }
 
             // Check if startTime is between slot
-            if (startTime.isBetween(dayjs(times[i]), dayjs(times[i]).add(props.eventType.length, 'minutes'))) {
-                times.splice(i, 1);
+            if (startTime.isBetween(dayjs(slots[i].time), dayjs(slots[i].time).add(props.eventType.length, 'minutes'))) {
+                slotBlocked = true;
+            }
+
+            if (slotBlocked) {
+                if (busyTime.eventType.maxAttendees >= busyTime.attendees.length) {
+                    slots[i].remainingAttendeeSpots = busyTime.eventType.maxAttendees - busyTime.attendees.length;
+                } else {
+                    slots.splice(i, 1);
+                }
+            } else {
+                if (busyTime.eventType.maxAttendees != null) {
+                    slots[i].remainingAttendeeSpots = busyTime.eventType.maxAttendees;
+                }
             }
         });
     }
 
     // Display available times
-    const availableTimes = times.map((time) =>
-        <div key={dayjs(time).utc().format()}>
+    const availableTimes = slots.map((slot) =>
+        <div key={dayjs(slot.time).utc().format()}>
             <Link
-                href={`/${props.user.username}/book?date=${dayjs(time).utc().format()}&type=${props.eventType.id}` + (rescheduleUid ? "&rescheduleUid=" + rescheduleUid : "")}>
-                <a key={dayjs(time).format("hh:mma")}
-                   className="block font-medium mb-4 text-blue-600 border border-blue-600 rounded hover:text-white hover:bg-blue-600 py-4">{dayjs(time).tz(selectedTimeZone).format(is24h ? "HH:mm" : "hh:mma")}
-                    {props.eventType.maxAttendees && (
+                href={`/${props.user.username}/book?date=${dayjs(slot.time).utc().format()}&type=${props.eventType.id}` + (rescheduleUid ? "&rescheduleUid=" + rescheduleUid : "")}>
+                <a key={dayjs(slot.time).format("hh:mma")}
+                   className="block font-medium mb-4 text-blue-600 border border-blue-600 rounded hover:text-white hover:bg-blue-600 py-4">{dayjs(slot.time).tz(selectedTimeZone).format(is24h ? "HH:mm" : "hh:mma")}
+                    {(slot.remainingAttendeeSpots != null) && (
                         <span>
-                            <br/> {props.eventType.maxAttendees} spots left</span>
+                            <br/> {slot.remainingAttendeeSpots} spots left</span>
                     )}
                 </a>
             </Link>
