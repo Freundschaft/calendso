@@ -183,10 +183,6 @@ export default function Type(props) {
                 } else {
                     slots.splice(i, 1);
                 }
-            } else {
-                if (busyTime.eventType.maxAttendees != null) {
-                    slots[i].remainingAttendeeSpots = busyTime.eventType.maxAttendees;
-                }
             }
         });
     }
