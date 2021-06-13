@@ -72,7 +72,7 @@ export default function Type(props) {
             }
 
             setLoading(true);
-            const res = await fetch(`/api/availability/${user}?dateFrom=${lowerBound.utc().format()}&dateTo=${upperBound.utc().format()}`);
+            const res = await fetch(`/api/availability/${user}?dateFrom=${lowerBound.utc().format()}&dateTo=${upperBound.utc().format()}&type=${props.eventType.id}`);
             const busyTimes = await res.json();
             setBusy(busyTimes);
             setLoading(false);
@@ -198,9 +198,9 @@ export default function Type(props) {
                 href={`/${props.user.username}/book?date=${dayjs(slot.time).utc().format()}&type=${props.eventType.id}` + (rescheduleUid ? "&rescheduleUid=" + rescheduleUid : "")}>
                 <a key={dayjs(slot.time).format("hh:mma")}
                    className="block font-medium mb-4 text-blue-600 border border-blue-600 rounded hover:text-white hover:bg-blue-600 py-4">{dayjs(slot.time).tz(selectedTimeZone).format(is24h ? "HH:mm" : "hh:mma")}
-                    {(slot.remainingAttendeeSpots != null) && (
+                    {(props.eventType.maxAttendees > 0) && (
                         <span>
-                            <br/> {slot.remainingAttendeeSpots} spots left</span>
+                            <br/> {slot.remainingAttendeeSpots != null ? slot.remainingAttendeeSpots : props.eventType.maxAttendees} spots left</span>
                     )}
                 </a>
             </Link>

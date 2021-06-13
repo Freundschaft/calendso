@@ -74,7 +74,7 @@ interface CalendarApiAdapter {
 
     deleteEvent(uid: String);
 
-    getAvailability(dateFrom, dateTo): Promise<any>;
+    getAvailability(dateFrom, dateTo, eventType): Promise<any>;
 }
 
 const MicrosoftOffice365Calendar = (credential): CalendarApiAdapter => {
@@ -114,7 +114,7 @@ const MicrosoftOffice365Calendar = (credential): CalendarApiAdapter => {
     };
 
     return {
-        getAvailability: (dateFrom, dateTo) => {
+        getAvailability: (dateFrom, dateTo, eventType) => {
             const payload = {
                 schedules: [credential.key.email],
                 startTime: {
@@ -178,7 +178,7 @@ const MicrosoftOffice365Calendar = (credential): CalendarApiAdapter => {
 
 const InternalCalendar = (credential): CalendarApiAdapter => {
     return {
-        getAvailability: async (dateFrom, dateTo) => {
+        getAvailability: async (dateFrom, dateTo, eventType) => {
             const bookings = await prisma.booking.findMany({
                 where: {
                     userId: credential.user.id,
@@ -188,6 +188,7 @@ const InternalCalendar = (credential): CalendarApiAdapter => {
                     endTime: {
                         lt: dateTo
                     },
+                    eventTypeId: eventType.id,
                 },
                 select: {
                     id: true,
@@ -221,7 +222,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
     const myGoogleAuth = googleAuth();
     myGoogleAuth.setCredentials(credential.key);
     return {
-        getAvailability: (dateFrom, dateTo) => new Promise((resolve, reject) => {
+        getAvailability: (dateFrom, dateTo, eventType) => new Promise((resolve, reject) => {
             const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
             calendar.calendarList
                 .list()
@@ -361,8 +362,8 @@ const calendars = (withCredentials): CalendarApiAdapter[] => withCredentials.map
 }).filter(Boolean);
 
 
-const getBusyTimes = (withCredentials, dateFrom, dateTo) => Promise.all(
-    calendars(withCredentials).map(c => c.getAvailability(dateFrom, dateTo))
+const getBusyTimes = (withCredentials, dateFrom, dateTo, eventType) => Promise.all(
+    calendars(withCredentials).map(c => c.getAvailability(dateFrom, dateTo, eventType))
 ).then(
     (results) => results.reduce((acc, availability) => acc.concat(availability), [])
 );
