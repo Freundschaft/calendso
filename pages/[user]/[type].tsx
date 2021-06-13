@@ -178,7 +178,7 @@ export default function Type(props) {
             }
 
             if (slotBlocked) {
-                if (busyTime.eventType.maxAttendees >= busyTime.attendees.length) {
+                if (busyTime.eventType.maxAttendees > busyTime.attendees.length) {
                     slots[i].remainingAttendeeSpots = busyTime.eventType.maxAttendees - busyTime.attendees.length;
                     slots[i].slotBookingId = busyTime.slotBookingId;
                 } else {
