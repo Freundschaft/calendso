@@ -19,6 +19,7 @@ export default function Availability(props) {
     const slugRef = useRef<HTMLInputElement>();
     const descriptionRef = useRef<HTMLTextAreaElement>();
     const lengthRef = useRef<HTMLInputElement>();
+    const maxAttendeesRef = useRef<HTMLInputElement>();
     const isHiddenRef = useRef<HTMLInputElement>();
 
     const startHoursRef = useRef<HTMLInputElement>();
@@ -55,13 +56,14 @@ export default function Availability(props) {
         const enteredSlug = slugRef.current.value;
         const enteredDescription = descriptionRef.current.value;
         const enteredLength = lengthRef.current.value;
+        const enteredMaxAttendees = maxAttendeesRef.current.value;
         const enteredIsHidden = isHiddenRef.current.checked;
 
         // TODO: Add validation
 
         const response = await fetch('/api/availability/eventtype', {
             method: 'POST',
-            body: JSON.stringify({title: enteredTitle, slug: enteredSlug, description: enteredDescription, length: enteredLength, hidden: enteredIsHidden}),
+            body: JSON.stringify({title: enteredTitle, slug: enteredSlug, description: enteredDescription, length: enteredLength, maxAttendees: enteredMaxAttendees, hidden: enteredIsHidden}),
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -243,6 +245,15 @@ export default function Availability(props) {
                                                 <input ref={lengthRef} type="number" name="length" id="length" required className="focus:ring-blue-500 focus:border-blue-500 block w-full pr-20 sm:text-sm border-gray-300 rounded-md" placeholder="15" />
                                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-sm">
                                                     minutes
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mb-4">
+                                            <label htmlFor="length" className="block text-sm font-medium text-gray-700">Max Attendees</label>
+                                            <div className="mt-1 relative rounded-md shadow-sm">
+                                                <input ref={maxAttendeesRef} type="number" name="length" id="length" required className="focus:ring-blue-500 focus:border-blue-500 block w-full pr-20 sm:text-sm border-gray-300 rounded-md" placeholder="1" />
+                                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-sm">
+                                                    attendees
                                                 </div>
                                             </div>
                                         </div>

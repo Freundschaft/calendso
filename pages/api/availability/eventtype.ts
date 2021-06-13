@@ -16,6 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             slug: req.body.slug,
             description: req.body.description,
             length: parseInt(req.body.length),
+            maxAttendees: parseInt(req.body.maxAttendees),
             hidden: req.body.hidden,
             locations: req.body.locations,
         };
