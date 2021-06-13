@@ -133,6 +133,9 @@ export default function Availability(props) {
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Length
                                             </th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Max Attendees
+                                            </th>
                                             <th scope="col" className="relative px-6 py-3">
                                                 <span className="sr-only">Edit</span>
                                             </th>
@@ -154,6 +157,9 @@ export default function Availability(props) {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {eventType.length} minutes
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {eventType.maxAttendees}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <Link href={"/" + props.user.username + "/" + eventType.slug}><a target="_blank" className="text-blue-600 hover:text-blue-900 mr-2">View</a></Link>
@@ -386,7 +392,8 @@ export async function getServerSideProps(context) {
             slug: true,
             description: true,
             length: true,
-            hidden: true
+            hidden: true,
+            maxAttendees: true
         }
     });
     return {
