@@ -1,5 +1,6 @@
 const {google} = require('googleapis');
 import createNewEventEmail from "./emails/new-event";
+import prisma from './prisma';
 
 const googleAuth = () => {
     const {client_secret, client_id, redirect_uris} = JSON.parse(process.env.GOOGLE_API_CREDENTIALS).web;
@@ -175,6 +176,44 @@ const MicrosoftOffice365Calendar = (credential): CalendarApiAdapter => {
     }
 };
 
+const InternalCalendar = (credential): CalendarApiAdapter => {
+    return {
+        getAvailability: async (dateFrom, dateTo) => {
+            const bookings = await prisma.booking.findMany({
+                where: {
+                    userId: credential.user.id,
+                    startTime: {
+                        gte: dateFrom
+                    },
+                    endTime: {
+                        lt: dateTo
+                    },
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    startTime: true,
+                    endTime: true,
+                    attendees: true,
+                }
+            });
+            return bookings.map((booking) => ({
+                start: booking.startTime,
+                end: booking.endTime
+            }))
+        },
+        createEvent: async (event: CalendarEvent) => {
+            return;
+        },
+        updateEvent: async (uid: String, event: CalendarEvent) => {
+            return;
+        },
+        deleteEvent: async (uid: String) => {
+            return;
+        }
+    };
+};
+
 const GoogleCalendar = (credential): CalendarApiAdapter => {
     const myGoogleAuth = googleAuth();
     myGoogleAuth.setCredentials(credential.key);
@@ -285,7 +324,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                 return resolve(event.data);
             });
         }),
-        deleteEvent: (uid: String) => new Promise( (resolve, reject) => {
+        deleteEvent: (uid: String) => new Promise((resolve, reject) => {
             const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
             calendar.events.delete({
                 auth: myGoogleAuth,
@@ -311,6 +350,8 @@ const calendars = (withCredentials): CalendarApiAdapter[] => withCredentials.map
             return GoogleCalendar(cred);
         case 'office365_calendar':
             return MicrosoftOffice365Calendar(cred);
+        case 'internal':
+            return InternalCalendar(cred);
         default:
             return; // unknown credential, could be legacy? In any case, ignore
     }

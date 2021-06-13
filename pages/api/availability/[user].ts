@@ -1,13 +1,13 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type {NextApiRequest, NextApiResponse} from 'next';
 import prisma from '../../../lib/prisma';
-import { getBusyTimes } from '../../../lib/calendarClient';
+import {getBusyTimes} from '../../../lib/calendarClient';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const { user } = req.query
+    const {user} = req.query;
 
     const currentUser = await prisma.user.findFirst({
         where: {
-          username: user,
+            username: user,
         },
         select: {
             credentials: true,
@@ -15,6 +15,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
     });
 
-    const availability = await getBusyTimes(currentUser.credentials, req.query.dateFrom, req.query.dateTo);
+    const availability = await getBusyTimes([...currentUser.credentials, {
+        type: 'internal',
+        key: 'default',
+        userId: currentUser.id,
+        user: currentUser,
+    }], req.query.dateFrom, req.query.dateTo);
+    // todo check availability of existing bookings via prisma too
     res.status(200).json(availability);
 }
