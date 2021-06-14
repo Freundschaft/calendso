@@ -1,7 +1,8 @@
 
 const withTM = require('next-transpile-modules')(['react-timezone-select']);
 
-console.log(JSON.stringify(process.env));
+console.log(process.env.BASE_URL);
+console.log(process.env.DATABASE_URL);
 
 // TODO: Revisit this later with getStaticProps in App
 if (process.env.NEXTAUTH_URL) {
