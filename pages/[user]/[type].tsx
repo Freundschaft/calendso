@@ -133,8 +133,9 @@ export default function Type(props) {
         <button key={day} onClick={(e) => {
             telemetry.withJitsu((jitsu) => jitsu.track(telemetryEventTypes.dateSelected, collectPageParameters()))
             setSelectedDate(dayjs().tz(selectedTimeZone).month(selectedMonth).date(day))
-        }} disabled={selectedMonth < parseInt(dayjs().format('MM')) && dayjs().month(selectedMonth).format("D") > day}
-                className={"text-center w-10 h-10 rounded-full mx-auto " + (dayjs().isSameOrBefore(dayjs().date(day).month(selectedMonth)) ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-400 font-light') + (dayjs(selectedDate).month(selectedMonth).format("D") == day ? ' bg-blue-600 text-white-important' : '')}>
+        }}
+                disabled={(!props.eventType.weekdays.includes(dayjs().month(selectedMonth).date(day).day())) || (selectedMonth < parseInt(dayjs().format('MM')) && dayjs().month(selectedMonth).format("D") > day)}
+                className={"text-center w-10 h-10 rounded-full mx-auto " + (dayjs().isSameOrBefore(dayjs().date(day).month(selectedMonth)) ? (props.eventType.weekdays.includes(dayjs().month(selectedMonth).date(day).day())) ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-400 font-light' : 'text-gray-400 font-light') + (dayjs(selectedDate).month(selectedMonth).format("D") == day ? ' bg-blue-600 text-white-important' : '')}>
             {day}
         </button>
     )];
@@ -147,6 +148,7 @@ export default function Type(props) {
                 selectedDate: selectedDate,
                 dayStartTime: props.user.startTime,
                 dayEndTime: props.user.endTime,
+                weekdays: props.eventType.weekdays,
             })
         , [selectedDate, selectedTimeZone, busy]);
 
@@ -425,7 +427,8 @@ export async function getServerSideProps(context) {
             title: true,
             description: true,
             length: true,
-            maxAttendees: true
+            maxAttendees: true,
+            weekdays: true,
         }
     });
 

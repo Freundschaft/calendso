@@ -18,10 +18,13 @@ const getSlots = ({
                       selectedTimeZone,
                       selectedDate,
                       dayStartTime,
-                      dayEndTime
+                      dayEndTime,
+                      weekdays,
                   }) => {
 
-    if (!selectedDate) return []
+    if (!selectedDate) return [];
+
+    if (!weekdays.includes(selectedDate.day())) return [];
 
     const lowerBound = selectedDate.tz(selectedTimeZone).startOf("day");
 

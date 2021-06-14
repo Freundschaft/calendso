@@ -22,6 +22,7 @@ model EventType {
   userId        Int?
   bookings      Booking[]
   maxAttendees  Int?
+  weekdays      Int[]
 }
 
 model Credential {
