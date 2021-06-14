@@ -267,16 +267,12 @@ export default function EventType(props) {
                                         </div>
                                     </div>
                                     <div className="mb-4">
-                                        <label htmlFor="length"
+                                        <label htmlFor="maxAttendees"
                                                className="block text-sm font-medium text-gray-700">Max Attendees</label>
                                         <div className="mt-1 relative rounded-md shadow-sm">
-                                            <input ref={lengthRef} type="number" name="length" id="length" required
+                                            <input ref={maxAttendeesRef} type="number" name="maxAttendees" id="maxAttendees" required
                                                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pr-20 sm:text-sm border-gray-300 rounded-md"
                                                    placeholder="15" defaultValue={props.eventType.maxAttendees}/>
-                                            <div
-                                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-sm">
-                                                minutes
-                                            </div>
                                         </div>
                                     </div>
                                     <div className="my-8">
@@ -404,6 +400,7 @@ export async function getServerSideProps(context) {
             length: true,
             hidden: true,
             locations: true,
+            maxAttendees: true,
         }
     });
 
