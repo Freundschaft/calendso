@@ -4,6 +4,8 @@ import Link from 'next/link';
 import prisma from '../../lib/prisma';
 import {useRouter} from 'next/router';
 import dayjs, {Dayjs} from 'dayjs';
+import durationPlugin from 'dayjs/plugin/duration';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import {Switch} from '@headlessui/react';
 import TimezoneSelect from 'react-timezone-select';
 import {ClockIcon, GlobeIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from '@heroicons/react/solid';
@@ -17,6 +19,9 @@ dayjs.extend(isSameOrBefore);
 dayjs.extend(isBetween);
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(durationPlugin);
+dayjs.extend(relativeTime)
+
 
 import getSlots from '../../lib/slots';
 import {collectPageParameters, telemetryEventTypes, useTelemetry} from "../../lib/telemetry";
@@ -53,7 +58,7 @@ export default function Type(props) {
 
     function initializeTimeOptions() {
         setSelectedTimeZone(localStorage.getItem('timeOption.preferredTimeZone') || dayjs.tz.guess());
-        setIs24h(!!(localStorage.getItem('timeOption.is24hClock')|| true));
+        setIs24h(!!(localStorage.getItem('timeOption.is24hClock') || true));
     }
 
     useEffect(() => {
@@ -235,7 +240,7 @@ export default function Type(props) {
                             </h1>
                             <p className="text-gray-500 mb-1 px-2 py-1 -ml-2">
                                 <ClockIcon className="inline-block w-4 h-4 mr-1 -mt-1"/>
-                                {props.eventType.length} minutes
+                                {dayjs.duration(props.eventType.length, 'minutes').humanize()}
                             </p>
                             <button
                                 onClick={toggleTimeOptions}
