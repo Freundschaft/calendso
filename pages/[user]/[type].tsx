@@ -53,7 +53,7 @@ export default function Type(props) {
 
     function initializeTimeOptions() {
         setSelectedTimeZone(localStorage.getItem('timeOption.preferredTimeZone') || dayjs.tz.guess());
-        setIs24h(!!localStorage.getItem('timeOption.is24hClock'));
+        setIs24h(!!(localStorage.getItem('timeOption.is24hClock')|| true));
     }
 
     useEffect(() => {
