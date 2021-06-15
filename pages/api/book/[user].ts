@@ -160,7 +160,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
         // Schedule event
         results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
-            const response = await createEvent(credential, evt);
+            const response = await createEvent(credential, evt, eventType);
             return {
                 type: credential.type,
                 response

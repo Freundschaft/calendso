@@ -154,7 +154,7 @@ export default function Type(props) {
 
     // Check for conflicts
     for (let i = slots.length - 1; i >= 0; i -= 1) {
-        busy.forEach(busyTime => {
+        for (const busyTime of busy) {
             let startTime = dayjs(busyTime.start);
             let endTime = dayjs(busyTime.end);
 
@@ -180,14 +180,15 @@ export default function Type(props) {
             }
 
             if (slotBlocked) {
-                if (busyTime.eventType.maxAttendees > busyTime.attendees.length) {
+                if (busyTime.attendees && (busyTime.eventType.maxAttendees > busyTime.attendees.length)) {
                     slots[i].remainingAttendeeSpots = busyTime.eventType.maxAttendees - busyTime.attendees.length;
                     slots[i].slotBookingId = busyTime.slotBookingId;
                 } else {
                     slots.splice(i, 1);
+                    break;
                 }
             }
-        });
+        }
     }
 
     // Display available times

@@ -68,7 +68,7 @@ interface CalendarEvent {
 };
 
 interface CalendarApiAdapter {
-    createEvent(event: CalendarEvent): Promise<any>;
+    createEvent(event: CalendarEvent, eventType): Promise<any>;
 
     updateEvent(uid: String, event: CalendarEvent);
 
@@ -148,7 +148,7 @@ const MicrosoftOffice365Calendar = (credential): CalendarApiAdapter => {
                 console.log(err);
             });
         },
-        createEvent: (event: CalendarEvent) => auth.getToken().then(accessToken => fetch('https://graph.microsoft.com/v1.0/me/calendar/events', {
+        createEvent: (event: CalendarEvent, eventType) => auth.getToken().then(accessToken => fetch('https://graph.microsoft.com/v1.0/me/calendar/events', {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer ' + accessToken,
@@ -207,7 +207,7 @@ const InternalCalendar = (credential): CalendarApiAdapter => {
                 slotBookingId: booking.id,
             }))
         },
-        createEvent: async (event: CalendarEvent) => {
+        createEvent: async (event: CalendarEvent, eventType) => {
             return;
         },
         updateEvent: async (uid: String, event: CalendarEvent) => {
@@ -233,7 +233,13 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                     orderBy: 'startTime',
                 });
 
-                const events = apires.data.items;
+                const events = apires.data.items.filter((event) => {
+                    if (event.extendedProperties && event.extendedProperties.private && event.extendedProperties.private['calendso.eventType']) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                });
 
                 return Object.values(events).flatMap(
                     (event) => {
@@ -247,7 +253,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                     }
                 );
             },
-            createEvent: (event: CalendarEvent) => new Promise((resolve, reject) => {
+            createEvent: (event: CalendarEvent, eventType) => new Promise((resolve, reject) => {
                 const payload = {
                     summary: event.title,
                     description: event.description,
@@ -266,6 +272,11 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                             {'method': 'email', 'minutes': 60}
                         ],
                     },
+                    extendedProperties: {
+                        private: {
+                            "calendso.eventType": eventType.id
+                        }
+                    }
                 };
 
                 if (event.location) {
@@ -370,14 +381,14 @@ const getBusyTimes = (withCredentials, dateFrom, dateTo, eventType) => Promise.a
     (results) => results.reduce((acc, availability) => acc.concat(availability), [])
 );
 
-const createEvent = (credential, calEvent: CalendarEvent): Promise<any> => {
+const createEvent = (credential, calEvent: CalendarEvent, eventType): Promise<any> => {
 
     createNewEventEmail(
         calEvent,
     );
 
     if (credential) {
-        return calendars([credential])[0].createEvent(calEvent);
+        return calendars([credential])[0].createEvent(calEvent, eventType);
     }
 
     return Promise.resolve({});
