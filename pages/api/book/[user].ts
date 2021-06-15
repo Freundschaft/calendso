@@ -11,73 +11,91 @@ const translator = short();
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const {user} = req.query;
 
-    const currentUser = await prisma.user.findFirst({
-        where: {
-            username: user,
-        },
-        select: {
-            id: true,
-            credentials: true,
-            timeZone: true,
-            email: true,
-            name: true,
-        }
-    });
+    const currentUser = await
+        prisma.user.findFirst({
+            where: {
+                username: user,
+            },
+            select: {
+                id: true,
+                credentials: true,
+                timeZone: true,
+                email: true,
+                name: true,
+            }
+        });
 
     const rescheduleUid = req.body.rescheduleUid;
     const slotBookingId = parseInt(req.body.slotBookingId);
 
 
-    if (slotBookingId) {
-        // Reschedule event
-        const booking = await prisma.booking.findUnique({
-            where: {
-                id: slotBookingId
-            },
-            select: {
-                attendees: true,
-                references: true,
-            }
-        });
-
-        const updatedBooking = await prisma.booking.update({
-            data: {
-                attendees: {
-                    create: [{
-                        email: req.body.email,
-                        name: req.body.name,
-                        timeZone: req.body.timeZone
-                    }],
+    if (true || slotBookingId) {
+        const eventType = await
+            prisma.eventType.findFirst({
+                where: {
+                    userId: currentUser.id,
+                    title: req.body.eventName,
                 },
-            },
-            where: {
-                id: slotBookingId
-            },
-            select: {
-                attendees: true,
-                references: true,
-            }
-        });
+                select: {
+                    id: true
+                }
+            });
 
-        const evt: CalendarEvent = {
-            type: req.body.eventName,
-            title: req.body.eventName,
-            description: req.body.notes,
-            startTime: req.body.start,
-            endTime: req.body.end,
-            location: req.body.location,
-            organizer: {email: currentUser.email, name: currentUser.name, timeZone: currentUser.timeZone},
-            attendees: updatedBooking.attendees,
-        };
+        const existingBooking = await
+            prisma.booking.findFirst({
+                where: {
+                    //id: slotBookingId,
+                    startTime: req.body.start,
+                    endTime: req.body.end,
+                    eventTypeId: eventType.id
+                },
+                select: {
+                    attendees: true,
+                    references: true,
+                }
+            });
 
-        const results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
-            const bookingRefUid = booking.references.filter((ref) => ref.type === credential.type)[0].uid;
-            return await updateEvent(credential, bookingRefUid, evt)
-        });
+        if (existingBooking) {
+            const updatedBooking = await
+                prisma.booking.update({
+                    data: {
+                        attendees: {
+                            create: [{
+                                email: req.body.email,
+                                name: req.body.name,
+                                timeZone: req.body.timeZone
+                            }],
+                        },
+                    },
+                    where: {
+                        id: slotBookingId
+                    },
+                    select: {
+                        attendees: true,
+                        references: true,
+                    }
+                });
 
-        res.status(200).json(results);
+            const evt: CalendarEvent = {
+                type: req.body.eventName,
+                title: req.body.eventName,
+                description: req.body.notes,
+                startTime: req.body.start,
+                endTime: req.body.end,
+                location: req.body.location,
+                organizer: {email: currentUser.email, name: currentUser.name, timeZone: currentUser.timeZone},
+                attendees: updatedBooking.attendees,
+            };
 
-        return;
+            const results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
+                const bookingRefUid = updatedBooking.references.filter((ref) => ref.type === credential.type)[0].uid;
+                return await updateEvent(credential, bookingRefUid, evt)
+            });
+
+            res.status(200).json(results);
+
+            return;
+        }
     }
 
     const evt: CalendarEvent = {
@@ -95,42 +113,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const hashUID = translator.fromUUID(uuidv5(JSON.stringify(evt), uuidv5.URL));
 
-    const eventType = await prisma.eventType.findFirst({
-        where: {
-            userId: currentUser.id,
-            title: evt.type
-        },
-        select: {
-            id: true
-        }
-    });
+    const eventType = await
+        prisma.eventType.findFirst({
+            where: {
+                userId: currentUser.id,
+                title: evt.type
+            },
+            select: {
+                id: true
+            }
+        });
 
     let results = undefined;
     let referencesToCreate = undefined;
 
     if (rescheduleUid) {
         // Reschedule event
-        const booking = await prisma.booking.findFirst({
-            where: {
-                uid: rescheduleUid
-            },
-            select: {
-                id: true,
-                references: {
-                    select: {
-                        id: true,
-                        type: true,
-                        uid: true
+        const booking = await
+            prisma.booking.findFirst({
+                where: {
+                    uid: rescheduleUid
+                },
+                select: {
+                    id: true,
+                    references: {
+                        select: {
+                            id: true,
+                            type: true,
+                            uid: true
+                        }
                     }
                 }
-            }
-        });
+            });
 
         // Use all integrations
-        results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
-            const bookingRefUid = booking.references.filter((ref) => ref.type === credential.type)[0].uid;
-            return await updateEvent(credential, bookingRefUid, evt)
-        });
+        results = await
+            async.mapLimit(currentUser.credentials, 5, async (credential) => {
+                const bookingRefUid = booking.references.filter((ref) => ref.type === credential.type)[0].uid;
+                return await updateEvent(credential, bookingRefUid, evt)
+            });
 
         // Clone elements
         referencesToCreate = [...booking.references];
@@ -152,20 +173,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         });
 
-        await Promise.all([
-            bookingReferenceDeletes,
-            attendeeDeletes,
-            bookingDeletes
-        ]);
+        await
+            Promise.all([
+                bookingReferenceDeletes,
+                attendeeDeletes,
+                bookingDeletes
+            ]);
     } else {
         // Schedule event
-        results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
-            const response = await createEvent(credential, evt, eventType);
-            return {
-                type: credential.type,
-                response
-            };
-        });
+        results = await
+            async.mapLimit(currentUser.credentials, 5, async (credential) => {
+                const response = await createEvent(credential, evt, eventType);
+                return {
+                    type: credential.type,
+                    response
+                };
+            });
 
         referencesToCreate = results.map((result => {
             return {
@@ -175,31 +198,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }));
     }
 
-    await prisma.booking.create({
-        data: {
-            uid: hashUID,
-            userId: currentUser.id,
-            references: {
-                create: referencesToCreate
-            },
-            eventTypeId: eventType.id,
+    await
+        prisma.booking.create({
+            data: {
+                uid: hashUID,
+                userId: currentUser.id,
+                references: {
+                    create: referencesToCreate
+                },
+                eventTypeId: eventType.id,
 
-            title: evt.title,
-            description: evt.description,
-            startTime: evt.startTime,
-            endTime: evt.endTime,
+                title: evt.title,
+                description: evt.description,
+                startTime: evt.startTime,
+                endTime: evt.endTime,
 
-            attendees: {
-                create: evt.attendees
+                attendees: {
+                    create: evt.attendees
+                }
             }
-        }
-    });
+        });
 
     // If one of the integrations allows email confirmations or no integrations are added, send it.
     if (currentUser.credentials.length === 0 || !results.every((result) => result.disableConfirmationEmail)) {
-        await createConfirmBookedEmail(
-            evt, hashUID
-        );
+        await
+            createConfirmBookedEmail(
+                evt, hashUID
+            );
     }
 
     res.status(200).json(results);
