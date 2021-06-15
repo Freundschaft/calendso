@@ -88,7 +88,7 @@ const getSlots = ({
             continue;
         }
 
-        slots.push(slot.time.tz(selectedTimeZone));
+        slots.push({time: slotTime.tz(selectedTimeZone)});
     }
 
     return slots;
