@@ -35,7 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 title: req.body.eventName,
             },
             select: {
-                id: true
+                id: true,
+                maxAttendees: true,
             }
         });
 
@@ -53,6 +54,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
         if (existingBooking) {
+            if ((bookingEventType.maxAttendees <= existingBooking.attendees.length)) {
+                throw new Error('maxAttendees reached');
+            }
             const updatedBooking = await prisma.booking.update({
                 data: {
                     attendees: {
