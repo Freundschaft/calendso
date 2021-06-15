@@ -26,55 +26,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
     const rescheduleUid = req.body.rescheduleUid;
-    const slotBookingId = parseInt(req.body.slotBookingId);
 
 
-    if (true || slotBookingId) {
-        const eventType = await
-            prisma.eventType.findFirst({
-                where: {
-                    userId: currentUser.id,
-                    title: req.body.eventName,
+    if (true) {
+        const bookingEventType = await prisma.eventType.findFirst({
+            where: {
+                userId: currentUser.id,
+                title: req.body.eventName,
+            },
+            select: {
+                id: true
+            }
+        });
+
+        const existingBooking = await prisma.booking.findFirst({
+            where: {
+                startTime: req.body.start,
+                endTime: req.body.end,
+                eventTypeId: bookingEventType.id
+            },
+            select: {
+                attendees: true,
+                references: true,
+                id: true,
+            }
+        });
+
+        if (existingBooking) {
+            const updatedBooking = await prisma.booking.update({
+                data: {
+                    attendees: {
+                        create: [{
+                            email: req.body.email,
+                            name: req.body.name,
+                            timeZone: req.body.timeZone
+                        }],
+                    },
                 },
-                select: {
-                    id: true
-                }
-            });
-
-        const existingBooking = await
-            prisma.booking.findFirst({
                 where: {
-                    //id: slotBookingId,
-                    startTime: req.body.start,
-                    endTime: req.body.end,
-                    eventTypeId: eventType.id
+                    id: existingBooking.id
                 },
                 select: {
                     attendees: true,
                     references: true,
                 }
             });
-
-        if (existingBooking) {
-            const updatedBooking = await
-                prisma.booking.update({
-                    data: {
-                        attendees: {
-                            create: [{
-                                email: req.body.email,
-                                name: req.body.name,
-                                timeZone: req.body.timeZone
-                            }],
-                        },
-                    },
-                    where: {
-                        id: slotBookingId
-                    },
-                    select: {
-                        attendees: true,
-                        references: true,
-                    }
-                });
 
             const evt: CalendarEvent = {
                 type: req.body.eventName,
@@ -89,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             const results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
                 const bookingRefUid = updatedBooking.references.filter((ref) => ref.type === credential.type)[0].uid;
-                return await updateEvent(credential, bookingRefUid, evt)
+                return await updateEvent(credential, bookingRefUid, evt, bookingEventType)
             });
 
             res.status(200).json(results);
@@ -150,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         results = await
             async.mapLimit(currentUser.credentials, 5, async (credential) => {
                 const bookingRefUid = booking.references.filter((ref) => ref.type === credential.type)[0].uid;
-                return await updateEvent(credential, bookingRefUid, evt)
+                return await updateEvent(credential, bookingRefUid, evt, eventType)
             });
 
         // Clone elements
@@ -181,14 +177,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ]);
     } else {
         // Schedule event
-        results = await
-            async.mapLimit(currentUser.credentials, 5, async (credential) => {
-                const response = await createEvent(credential, evt, eventType);
-                return {
-                    type: credential.type,
-                    response
-                };
-            });
+        results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
+            const response = await createEvent(credential, evt, eventType);
+            return {
+                type: credential.type,
+                response
+            };
+        });
 
         referencesToCreate = results.map((result => {
             return {
@@ -198,33 +193,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }));
     }
 
-    await
-        prisma.booking.create({
-            data: {
-                uid: hashUID,
-                userId: currentUser.id,
-                references: {
-                    create: referencesToCreate
-                },
-                eventTypeId: eventType.id,
+    await prisma.booking.create({
+        data: {
+            uid: hashUID,
+            userId: currentUser.id,
+            references: {
+                create: referencesToCreate
+            },
+            eventTypeId: eventType.id,
 
-                title: evt.title,
-                description: evt.description,
-                startTime: evt.startTime,
-                endTime: evt.endTime,
+            title: evt.title,
+            description: evt.description,
+            startTime: evt.startTime,
+            endTime: evt.endTime,
 
-                attendees: {
-                    create: evt.attendees
-                }
+            attendees: {
+                create: evt.attendees
             }
-        });
+        }
+    });
 
     // If one of the integrations allows email confirmations or no integrations are added, send it.
     if (currentUser.credentials.length === 0 || !results.every((result) => result.disableConfirmationEmail)) {
-        await
-            createConfirmBookedEmail(
-                evt, hashUID
-            );
+        await createConfirmBookedEmail(
+            evt, hashUID
+        );
     }
 
     res.status(200).json(results);

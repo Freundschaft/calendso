@@ -70,7 +70,7 @@ interface CalendarEvent {
 interface CalendarApiAdapter {
     createEvent(event: CalendarEvent, eventType): Promise<any>;
 
-    updateEvent(uid: String, event: CalendarEvent);
+    updateEvent(uid: String, event: CalendarEvent, eventType);
 
     deleteEvent(uid: String);
 
@@ -165,7 +165,7 @@ const MicrosoftOffice365Calendar = (credential): CalendarApiAdapter => {
                 'Authorization': 'Bearer ' + accessToken
             }
         }).then(handleErrorsRaw)),
-        updateEvent: (uid: String, event: CalendarEvent) => auth.getToken().then(accessToken => fetch('https://graph.microsoft.com/v1.0/me/calendar/events/' + uid, {
+        updateEvent: (uid: String, event: CalendarEvent, eventType) => auth.getToken().then(accessToken => fetch('https://graph.microsoft.com/v1.0/me/calendar/events/' + uid, {
             method: 'PATCH',
             headers: {
                 'Authorization': 'Bearer ' + accessToken,
@@ -204,13 +204,12 @@ const InternalCalendar = (credential): CalendarApiAdapter => {
                 end: booking.endTime,
                 eventType: booking.eventType,
                 attendees: booking.attendees,
-                slotBookingId: booking.id,
             }))
         },
         createEvent: async (event: CalendarEvent, eventType) => {
             return;
         },
-        updateEvent: async (uid: String, event: CalendarEvent) => {
+        updateEvent: async (uid: String, event: CalendarEvent, eventType) => {
             return;
         },
         deleteEvent: async (uid: String) => {
@@ -251,7 +250,6 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                             end: event.end.dateTime,
                             eventType: eventType,
                             //attendees: booking.attendees,
-                            //slotBookingId: booking.id,
                         };
                     }
                 );
@@ -259,7 +257,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
             createEvent: (event: CalendarEvent, eventType) => new Promise((resolve, reject) => {
                 const payload = {
                     summary: event.title,
-                    description: event.description,
+                    description: event.description + '\n' + JSON.stringify(event.attendees),
                     start: {
                         dateTime: event.startTime,
                         timeZone: event.organizer.timeZone,
@@ -268,7 +266,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                         dateTime: event.endTime,
                         timeZone: event.organizer.timeZone,
                     },
-                    attendees: event.attendees,
+                    //attendees: event.attendees,
                     reminders: {
                         useDefault: false,
                         overrides: [
@@ -300,10 +298,10 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                 });
             }),
             updateEvent:
-                (uid: String, event: CalendarEvent) => new Promise((resolve, reject) => {
+                (uid: String, event: CalendarEvent, eventType) => new Promise((resolve, reject) => {
                     const payload = {
                         summary: event.title,
-                        description: event.description,
+                        description: event.description + '\n' + JSON.stringify(event.attendees),
                         start: {
                             dateTime: event.startTime,
                             timeZone: event.organizer.timeZone,
@@ -312,7 +310,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                             dateTime: event.endTime,
                             timeZone: event.organizer.timeZone,
                         },
-                        attendees: event.attendees,
+                        //attendees: event.attendees,
                         reminders: {
                             useDefault: false,
                             overrides: [
@@ -402,9 +400,9 @@ const createEvent = (credential, calEvent: CalendarEvent, eventType): Promise<an
     return Promise.resolve({});
 };
 
-const updateEvent = (credential, uid: String, calEvent: CalendarEvent): Promise<any> => {
+const updateEvent = (credential, uid: String, calEvent: CalendarEvent, eventType): Promise<any> => {
     if (credential) {
-        return calendars([credential])[0].updateEvent(uid, calEvent);
+        return calendars([credential])[0].updateEvent(uid, calEvent, eventType);
     }
 
     return Promise.resolve({});
