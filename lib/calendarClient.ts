@@ -72,7 +72,7 @@ interface CalendarApiAdapter {
 
     updateEvent(uid: String, event: CalendarEvent, eventType);
 
-    deleteEvent(uid: String);
+    deleteEvent(uid: String, eventType);
 
     getAvailability(dateFrom, dateTo, eventType): Promise<any>;
 }
@@ -159,7 +159,7 @@ const MicrosoftOffice365Calendar = (credential): CalendarApiAdapter => {
             ...responseBody,
             disableConfirmationEmail: true,
         }))),
-        deleteEvent: (uid: String) => auth.getToken().then(accessToken => fetch('https://graph.microsoft.com/v1.0/me/calendar/events/' + uid, {
+        deleteEvent: (uid: String, eventType) => auth.getToken().then(accessToken => fetch('https://graph.microsoft.com/v1.0/me/calendar/events/' + uid, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + accessToken
@@ -212,13 +212,11 @@ const InternalCalendar = (credential): CalendarApiAdapter => {
         updateEvent: async (uid: String, event: CalendarEvent, eventType) => {
             return;
         },
-        deleteEvent: async (uid: String) => {
+        deleteEvent: async (uid: String, eventType) => {
             return;
         }
     };
 };
-
-const googleCalendarId = "c_54j19r60g72fkrpdf3an761dr8@group.calendar.google.com";
 
 const GoogleCalendar = (credential): CalendarApiAdapter => {
         const myGoogleAuth = googleAuth();
@@ -230,7 +228,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                 const apires = await calendar.events.list({
                     timeMin: dateFrom,
                     timeMax: dateTo,
-                    calendarId: googleCalendarId,
+                    calendarId: eventType.conflictCalendarId,
                     singleEvents: true,
                     orderBy: 'startTime',
                 });
@@ -287,7 +285,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                 const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
                 calendar.events.insert({
                     auth: myGoogleAuth,
-                    calendarId: googleCalendarId,
+                    calendarId: eventType.addCalendarId,
                     resource: payload,
                 }, function (err, event) {
                     if (err) {
@@ -331,7 +329,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                     const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
                     calendar.events.update({
                         auth: myGoogleAuth,
-                        calendarId: googleCalendarId,
+                        calendarId: eventType.addCalendarId,
                         eventId: uid,
                         sendNotifications: true,
                         sendUpdates: 'all',
@@ -345,11 +343,11 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                     });
                 }),
             deleteEvent:
-                (uid: String) => new Promise((resolve, reject) => {
+                (uid: String, eventType) => new Promise((resolve, reject) => {
                     const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
                     calendar.events.delete({
                         auth: myGoogleAuth,
-                        calendarId: googleCalendarId,
+                        calendarId: eventType.addCalendarId,
                         eventId: uid,
                         sendNotifications: true,
                         sendUpdates: 'all',
@@ -408,9 +406,9 @@ const updateEvent = (credential, uid: String, calEvent: CalendarEvent, eventType
     return Promise.resolve({});
 };
 
-const deleteEvent = (credential, uid: String): Promise<any> => {
+const deleteEvent = (credential, uid: String, eventType): Promise<any> => {
     if (credential) {
-        return calendars([credential])[0].deleteEvent(uid);
+        return calendars([credential])[0].deleteEvent(uid, eventType);
     }
 
     return Promise.resolve({});

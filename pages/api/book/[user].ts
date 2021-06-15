@@ -37,6 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             select: {
                 id: true,
                 maxAttendees: true,
+                addCalendarId: true,
+                conflictCalendarId: true,
             }
         });
 
@@ -120,7 +122,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 title: evt.type
             },
             select: {
-                id: true
+                id: true,
+                addCalendarId: true,
+                conflictCalendarId: true,
             }
         });
 

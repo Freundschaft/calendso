@@ -33,7 +33,8 @@ export default function Type(props) {
         setLoading(true);
 
         let payload = {
-            uid: uid
+            uid: uid,
+            eventTypeId: props.eventType.id
         };
 
         telemetry.withJitsu(jitsu => jitsu.track(telemetryEventTypes.bookingCancelled, collectPageParameters()));

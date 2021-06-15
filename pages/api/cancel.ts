@@ -6,7 +6,23 @@ export default async function handler(req, res) {
   if (req.method == "POST") {
     const uid = req.body.uid;
 
-    const bookingToDelete = await prisma.booking.findFirst({
+
+      const eventType = await prisma.eventType.findUnique({
+          where: {
+              id: parseInt(req.body.eventTypeId),
+          },
+          select: {
+              id: true,
+              title: true,
+              description: true,
+              length: true,
+              conflictCalendarId: true,
+              addCalendarId: true
+          }
+      });
+
+
+      const bookingToDelete = await prisma.booking.findFirst({
       where: {
         uid: uid,
       },
@@ -29,7 +45,7 @@ export default async function handler(req, res) {
 
     const apiDeletes = async.mapLimit(bookingToDelete.user.credentials, 5, async (credential) => {
       const bookingRefUid = bookingToDelete.references.filter((ref) => ref.type === credential.type)[0].uid;
-      return await deleteEvent(credential, bookingRefUid);
+      return await deleteEvent(credential, bookingRefUid, eventType);
     });
     const attendeeDeletes = prisma.attendee.deleteMany({
       where: {
