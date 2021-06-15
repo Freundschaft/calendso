@@ -131,8 +131,8 @@ export default function Type(props) {
     // Combine placeholder days with actual days
     const calendar = [...emptyDays, ...days.map((day) =>
         <button key={day} onClick={(e) => {
-            telemetry.withJitsu((jitsu) => jitsu.track(telemetryEventTypes.dateSelected, collectPageParameters()))
-            setSelectedDate(dayjs().tz(selectedTimeZone).month(selectedMonth).date(day))
+            telemetry.withJitsu((jitsu) => jitsu.track(telemetryEventTypes.dateSelected, collectPageParameters()));
+            setSelectedDate(dayjs().tz(selectedTimeZone).month(selectedMonth).date(day));
         }}
                 disabled={(!props.eventType.weekdays.includes(dayjs().month(selectedMonth).date(day).day())) || (selectedMonth < parseInt(dayjs().format('MM')) && dayjs().month(selectedMonth).format("D") > day)}
                 className={"text-center w-10 h-10 rounded-full mx-auto " + (dayjs().isSameOrBefore(dayjs().date(day).month(selectedMonth)) ? (props.eventType.weekdays.includes(dayjs().month(selectedMonth).date(day).day())) ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-400 font-light' : 'text-gray-400 font-light') + (dayjs(selectedDate).month(selectedMonth).format("D") == day ? ' bg-blue-600 text-white-important' : '')}>
