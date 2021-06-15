@@ -220,133 +220,134 @@ const InternalCalendar = (credential): CalendarApiAdapter => {
 };
 
 const GoogleCalendar = (credential): CalendarApiAdapter => {
-    const myGoogleAuth = googleAuth();
-    myGoogleAuth.setCredentials(credential.key);
-    return {
-        getAvailability: (dateFrom, dateTo, eventType) => new Promise((resolve, reject) => {
-            const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
-            calendar.calendarList
-                .list()
-                .then(cals => {
-                    calendar.freebusy.query({
-                        requestBody: {
-                            timeMin: dateFrom,
-                            timeMax: dateTo,
-                            items: cals.data.items
-                        }
-                    }, (err, apires) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        resolve(
-                            Object.values(apires.data.calendars).flatMap(
-                                (item) => item["busy"]
-                            )
-                        )
-                    });
-                })
-                .catch((err) => {
-                    reject(err);
+        const myGoogleAuth = googleAuth();
+        myGoogleAuth.setCredentials(credential.key);
+        return {
+            getAvailability: async (dateFrom, dateTo, eventType) => {
+                const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
+                const apires = await calendar.events.list({
+                    timeMin: dateFrom,
+                    timeMax: dateTo,
+                    calendarId: "primary",
+                    singleEvents: true,
+                    orderBy: 'startTime',
                 });
 
-        }),
-        createEvent: (event: CalendarEvent) => new Promise((resolve, reject) => {
-            const payload = {
-                summary: event.title,
-                description: event.description,
-                start: {
-                    dateTime: event.startTime,
-                    timeZone: event.organizer.timeZone,
-                },
-                end: {
-                    dateTime: event.endTime,
-                    timeZone: event.organizer.timeZone,
-                },
-                attendees: event.attendees,
-                reminders: {
-                    useDefault: false,
-                    overrides: [
-                        {'method': 'email', 'minutes': 60}
-                    ],
-                },
-            };
+                const events = apires.data.items;
 
-            if (event.location) {
-                payload['location'] = event.location;
-            }
+                return Object.values(events).flatMap(
+                    (event) => {
+                        return {
+                            start: event.start,
+                            end: event.end,
+                            eventType: eventType,
+                            //attendees: booking.attendees,
+                            //slotBookingId: booking.id,
+                        };
+                    }
+                );
+            },
+            createEvent: (event: CalendarEvent) => new Promise((resolve, reject) => {
+                const payload = {
+                    summary: event.title,
+                    description: event.description,
+                    start: {
+                        dateTime: event.startTime,
+                        timeZone: event.organizer.timeZone,
+                    },
+                    end: {
+                        dateTime: event.endTime,
+                        timeZone: event.organizer.timeZone,
+                    },
+                    attendees: event.attendees,
+                    reminders: {
+                        useDefault: false,
+                        overrides: [
+                            {'method': 'email', 'minutes': 60}
+                        ],
+                    },
+                };
 
-            const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
-            calendar.events.insert({
-                auth: myGoogleAuth,
-                calendarId: 'primary',
-                resource: payload,
-            }, function (err, event) {
-                if (err) {
-                    console.log('There was an error contacting the Calendar service: ' + err);
-                    return reject(err);
+                if (event.location) {
+                    payload['location'] = event.location;
                 }
-                return resolve(event.data);
-            });
-        }),
-        updateEvent: (uid: String, event: CalendarEvent) => new Promise((resolve, reject) => {
-            const payload = {
-                summary: event.title,
-                description: event.description,
-                start: {
-                    dateTime: event.startTime,
-                    timeZone: event.organizer.timeZone,
-                },
-                end: {
-                    dateTime: event.endTime,
-                    timeZone: event.organizer.timeZone,
-                },
-                attendees: event.attendees,
-                reminders: {
-                    useDefault: false,
-                    overrides: [
-                        {'method': 'email', 'minutes': 60}
-                    ],
-                },
-            };
 
-            if (event.location) {
-                payload['location'] = event.location;
-            }
+                const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
+                calendar.events.insert({
+                    auth: myGoogleAuth,
+                    calendarId: 'primary',
+                    resource: payload,
+                }, function (err, event) {
+                    if (err) {
+                        console.log('There was an error contacting the Calendar service: ' + err);
+                        return reject(err);
+                    }
+                    return resolve(event.data);
+                });
+            }),
+            updateEvent:
+                (uid: String, event: CalendarEvent) => new Promise((resolve, reject) => {
+                    const payload = {
+                        summary: event.title,
+                        description: event.description,
+                        start: {
+                            dateTime: event.startTime,
+                            timeZone: event.organizer.timeZone,
+                        },
+                        end: {
+                            dateTime: event.endTime,
+                            timeZone: event.organizer.timeZone,
+                        },
+                        attendees: event.attendees,
+                        reminders: {
+                            useDefault: false,
+                            overrides: [
+                                {'method': 'email', 'minutes': 60}
+                            ],
+                        },
+                    };
 
-            const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
-            calendar.events.update({
-                auth: myGoogleAuth,
-                calendarId: 'primary',
-                eventId: uid,
-                sendNotifications: true,
-                sendUpdates: 'all',
-                resource: payload
-            }, function (err, event) {
-                if (err) {
-                    console.log('There was an error contacting the Calendar service: ' + err);
-                    return reject(err);
-                }
-                return resolve(event.data);
-            });
-        }),
-        deleteEvent: (uid: String) => new Promise((resolve, reject) => {
-            const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
-            calendar.events.delete({
-                auth: myGoogleAuth,
-                calendarId: 'primary',
-                eventId: uid,
-                sendNotifications: true,
-                sendUpdates: 'all',
-            }, function (err, event) {
-                if (err) {
-                    console.log('There was an error contacting the Calendar service: ' + err);
-                    return reject(err);
-                }
-                return resolve(event.data);
-            });
-        })
-    };
-};
+                    if (event.location) {
+                        payload['location'] = event.location;
+                    }
+
+                    const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
+                    calendar.events.update({
+                        auth: myGoogleAuth,
+                        calendarId: 'primary',
+                        eventId: uid,
+                        sendNotifications: true,
+                        sendUpdates: 'all',
+                        resource: payload
+                    }, function (err, event) {
+                        if (err) {
+                            console.log('There was an error contacting the Calendar service: ' + err);
+                            return reject(err);
+                        }
+                        return resolve(event.data);
+                    });
+                }),
+            deleteEvent:
+                (uid: String) => new Promise((resolve, reject) => {
+                    const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
+                    calendar.events.delete({
+                        auth: myGoogleAuth,
+                        calendarId: 'primary',
+                        eventId: uid,
+                        sendNotifications: true,
+                        sendUpdates: 'all',
+                    }, function (err, event) {
+                        if (err) {
+                            console.log('There was an error contacting the Calendar service: ' + err);
+                            return reject(err);
+                        }
+                        return resolve(event.data);
+                    });
+                })
+        }
+            ;
+    }
+;
 
 // factory
 const calendars = (withCredentials): CalendarApiAdapter[] => withCredentials.map((cred) => {
