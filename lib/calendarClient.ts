@@ -319,6 +319,11 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                                 {'method': 'email', 'minutes': 60}
                             ],
                         },
+                        extendedProperties: {
+                            private: {
+                                "calendso.eventType": eventType.id
+                            }
+                        }
                     };
 
                     if (event.location) {
