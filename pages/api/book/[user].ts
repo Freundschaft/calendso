@@ -36,10 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             },
             select: {
                 attendees: true,
+                references: true,
             }
         });
 
-        await prisma.booking.update({
+        const updatedBooking = await prisma.booking.update({
             data: {
                 attendees: {
                     create: [{
@@ -52,6 +53,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             where: {
                 id: slotBookingId
             },
+            select: {
+                attendees: true,
+                references: true,
+            }
+        });
+
+        const evt: CalendarEvent = {
+            type: req.body.eventName,
+            title: req.body.eventName,
+            description: req.body.notes,
+            startTime: req.body.start,
+            endTime: req.body.end,
+            location: req.body.location,
+            organizer: {email: currentUser.email, name: currentUser.name, timeZone: currentUser.timeZone},
+            attendees: updatedBooking.attendees,
+        };
+
+        const results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
+            const bookingRefUid = booking.references.filter((ref) => ref.type === credential.type)[0].uid;
+            return await updateEvent(credential, bookingRefUid, evt)
         });
 
         res.status(200).json(results);
