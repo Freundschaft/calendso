@@ -23,6 +23,8 @@ model EventType {
   bookings      Booking[]
   maxAttendees  Int?
   weekdays      Int[]
+  conflictCalendarId    String?
+  addCalendarId String?
 }
 
 model Credential {
