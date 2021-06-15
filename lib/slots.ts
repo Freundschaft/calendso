@@ -37,9 +37,9 @@ const getSlots = ({
             minutes <= dayEndTime - eventLength;
             minutes += parseInt(eventLength, 10)
         ) {
-            const slot = lowerBound.add(minutes, "minutes");
-            if (slot > now) {
-                slots.push({time: slot});
+            const slotTime = lowerBound.add(minutes, "minutes");
+            if (slotTime > now) {
+                slots.push({time: slotTime});
             }
         }
         return slots;
@@ -76,14 +76,14 @@ const getSlots = ({
         minutes <= maxMinutes;
         minutes += parseInt(eventLength, 10)
     ) {
-        const slot = startDateTime.add(minutes, "minutes");
+        const slotTime = startDateTime.add(minutes, "minutes");
 
-        const minutesFromMidnight = getMinutesFromMidnight(slot);
+        const minutesFromMidnight = getMinutesFromMidnight(slotTime);
 
         if (
             minutesFromMidnight < dayStartTime ||
             minutesFromMidnight > dayEndTime - eventLength ||
-            slot < now
+            slotTime < now
         ) {
             continue;
         }
