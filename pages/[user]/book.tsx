@@ -29,7 +29,6 @@ export default function Book(props) {
     const [selectedLocation, setSelectedLocation] = useState<LocationType>(locations.length === 1 ? locations[0].type : '');
     const telemetry = useTelemetry();
     useEffect(() => {
-
         setPreferredTimeZone(localStorage.getItem('timeOption.preferredTimeZone') || dayjs.tz.guess());
         setIs24h(!!localStorage.getItem('timeOption.is24hClock'));
 
@@ -46,7 +45,7 @@ export default function Book(props) {
         [LocationType.Phone]: 'Phone call',
     };
 
-    const bookingHandler = event => {
+    const bookingHandler = async event => {
         event.preventDefault();
 
         let payload = {
@@ -65,7 +64,7 @@ export default function Book(props) {
         }
 
         telemetry.withJitsu(jitsu => jitsu.track(telemetryEventTypes.bookingConfirmed, collectPageParameters()));
-        const res = fetch(
+        const res = await fetch(
             '/api/book/' + user,
             {
                 body: JSON.stringify(payload),
@@ -76,13 +75,17 @@ export default function Book(props) {
             }
         );
 
-        let successUrl = `/success?date=${date}&type=${props.eventType.id}&user=${props.user.username}&reschedule=1`;
-        if (payload['location']) {
-            successUrl += "&location=" + encodeURIComponent(payload['location']);
-        }
+        if (res.ok) {
+            let successUrl = `/success?date=${date}&type=${props.eventType.id}&user=${props.user.username}&reschedule=1`;
+            if (payload['location']) {
+                successUrl += "&location=" + encodeURIComponent(payload['location']);
+            }
 
-        router.push(successUrl);
-    }
+            router.push(successUrl);
+        } else {
+            router.push(`/error?error=${res.statusText}`);
+        }
+    };
 
     return (
         <div>
