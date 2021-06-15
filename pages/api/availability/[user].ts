@@ -18,6 +18,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const eventType = req.query.type ? await prisma.eventType.findUnique({
         where: {
             id: parseInt(type),
+        },
+        select: {
+            description: true,
+            hidden: true,
+            id: true,
+            length: true,
+            locations: true,
+            maxAttendees: true,
+            slug: true,
+            title: true,
+            userId: true,
+            weekdays: true,
+            conflictCalendarId: true,
+            addCalendarId: true,
         }
     }) : null;
 

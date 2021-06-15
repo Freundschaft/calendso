@@ -223,6 +223,9 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
         myGoogleAuth.setCredentials(credential.key);
         return {
             getAvailability: async (dateFrom, dateTo, eventType) => {
+                if (!eventType.conflictCalendarId) {
+                    return [];
+                }
                 const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
                 //const calendarList = await calendar.calendarList.list();
                 const apires = await calendar.events.list({
