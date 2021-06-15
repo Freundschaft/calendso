@@ -219,16 +219,19 @@ const InternalCalendar = (credential): CalendarApiAdapter => {
     };
 };
 
+const googleCalendarId = "c_54j19r60g72fkrpdf3an761dr8@group.calendar.google.com";
+
 const GoogleCalendar = (credential): CalendarApiAdapter => {
         const myGoogleAuth = googleAuth();
         myGoogleAuth.setCredentials(credential.key);
         return {
             getAvailability: async (dateFrom, dateTo, eventType) => {
                 const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
+                //const calendarList = await calendar.calendarList.list();
                 const apires = await calendar.events.list({
                     timeMin: dateFrom,
                     timeMax: dateTo,
-                    calendarId: "primary",
+                    calendarId: googleCalendarId,
                     singleEvents: true,
                     orderBy: 'startTime',
                 });
@@ -286,7 +289,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                 const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
                 calendar.events.insert({
                     auth: myGoogleAuth,
-                    calendarId: 'primary',
+                    calendarId: googleCalendarId,
                     resource: payload,
                 }, function (err, event) {
                     if (err) {
@@ -325,7 +328,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                     const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
                     calendar.events.update({
                         auth: myGoogleAuth,
-                        calendarId: 'primary',
+                        calendarId: googleCalendarId,
                         eventId: uid,
                         sendNotifications: true,
                         sendUpdates: 'all',
@@ -343,7 +346,7 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                     const calendar = google.calendar({version: 'v3', auth: myGoogleAuth});
                     calendar.events.delete({
                         auth: myGoogleAuth,
-                        calendarId: 'primary',
+                        calendarId: googleCalendarId,
                         eventId: uid,
                         sendNotifications: true,
                         sendUpdates: 'all',
