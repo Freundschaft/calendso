@@ -238,8 +238,8 @@ const GoogleCalendar = (credential): CalendarApiAdapter => {
                 return Object.values(events).flatMap(
                     (event) => {
                         return {
-                            start: event.start,
-                            end: event.end,
+                            start: event.start.dateTime,
+                            end: event.end.dateTime,
                             eventType: eventType,
                             //attendees: booking.attendees,
                             //slotBookingId: booking.id,
