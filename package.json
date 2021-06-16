@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "debug_win": "SET NODE_OPTIONS=--inspect&&next dev",
-    "dev": "SET NODE_OPTIONS=--inspect&&next dev",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "postinstall": "prisma generate"
