@@ -113,7 +113,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ]
     };
 
-    const hashUID = translator.fromUUID(uuidv5(JSON.stringify(evt), uuidv5.URL));
+    const hashUID: string = translator.fromUUID(uuidv5(JSON.stringify(evt), uuidv5.URL));
+    const cancelLink: string = process.env.BASE_URL + '/cancel/' + hashUID;
+    const rescheduleLink: string = process.env.BASE_URL + '/reschedule/' + hashUID;
+    const appendLinksToEvents = (event: CalendarEvent) => {
+        const eventCopy = {...event};
+        eventCopy.description += "\n\n"
+            + "Need to change this event?\n"
+            + "Cancel: " + cancelLink + "\n"
+            + "Reschedule:" + rescheduleLink;
+
+        return eventCopy;
+    };
 
     const eventType = await
         prisma.eventType.findFirst({
@@ -151,11 +162,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             });
 
         // Use all integrations
-        results = await
-            async.mapLimit(currentUser.credentials, 5, async (credential) => {
-                const bookingRefUid = booking.references.filter((ref) => ref.type === credential.type)[0].uid;
-                return await updateEvent(credential, bookingRefUid, evt, eventType)
-            });
+        results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
+            const bookingRefUid = booking.references.filter((ref) => ref.type === credential.type)[0].uid;
+            return await updateEvent(credential, bookingRefUid, appendLinksToEvents(evt), eventType)
+        });
 
         // Clone elements
         referencesToCreate = [...booking.references];
@@ -186,7 +196,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
         // Schedule event
         results = await async.mapLimit(currentUser.credentials, 5, async (credential) => {
-            const response = await createEvent(credential, evt, eventType);
+            const response = await createEvent(credential, appendLinksToEvents(evt), eventType);
             return {
                 type: credential.type,
                 response
@@ -224,7 +234,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // If one of the integrations allows email confirmations or no integrations are added, send it.
     if (currentUser.credentials.length === 0 || !results.every((result) => result.disableConfirmationEmail)) {
         await createConfirmBookedEmail(
-            evt, hashUID
+            evt, cancelLink, rescheduleLink
         );
     }
 
