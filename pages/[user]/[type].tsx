@@ -151,8 +151,8 @@ export default function Type(props) {
                 selectedTimeZone: selectedTimeZone,
                 eventLength: props.eventType.length,
                 selectedDate: selectedDate,
-                dayStartTime: props.user.startTime,
-                dayEndTime: props.user.endTime,
+                dayStartTime: props.eventType.startTime || props.user.startTime,
+                dayEndTime: props.eventType.endTime || props.user.endTime,
                 weekdays: props.eventType.weekdays,
             })
         , [selectedDate, selectedTimeZone, busy]);
@@ -434,6 +434,8 @@ export async function getServerSideProps(context) {
             length: true,
             maxAttendees: true,
             weekdays: true,
+            startTime: true,
+            endTime: true,
         }
     });
 
