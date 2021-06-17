@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "EventType" ADD COLUMN     "endTime" INTEGER DEFAULT 1440,
+ADD COLUMN     "startTime" INTEGER DEFAULT 0;

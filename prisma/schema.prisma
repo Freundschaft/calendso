@@ -25,6 +25,8 @@ model EventType {
   weekdays      Int[]
   conflictCalendarId    String?
   addCalendarId String?
+  startTime     Int? @default(0)
+  endTime       Int? @default(1440)
 }
 
 model Credential {
