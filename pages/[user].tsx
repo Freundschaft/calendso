@@ -10,7 +10,7 @@ export default function User(props) {
                 <a className="block px-6 py-4">
                     <div className="inline-block w-3 h-3 rounded-full mr-2" style={{backgroundColor:getRandomColorCode()}}></div>
                     <h2 className="inline-block font-medium">{type.title}</h2>
-                    <p className="inline-block text-gray-400 ml-2">{type.description}</p>
+                    <p className="inline-block text-gray-400 ml-2 whitespace-pre-wrap">{type.description}</p>
                 </a>
             </Link>
         </li>

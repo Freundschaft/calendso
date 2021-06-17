@@ -293,9 +293,9 @@ export default function Type(props) {
                                     />
                                 </div>
                             )}
-                            <p className="text-gray-600 mt-3 mb-8">
+                            <div className="text-gray-600 mt-3 mb-8 whitespace-pre-wrap">
                                 {props.eventType.description}
-                            </p>
+                            </div>
                         </div>
                         <div
                             className={
