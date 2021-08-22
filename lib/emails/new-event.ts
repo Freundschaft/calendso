@@ -79,6 +79,9 @@ const html = (evt: CalendarEvent) => `
     <br />
     <strong>Invitee Email:</strong><br />
     <a href="mailto:${evt.attendees[0].email}">${evt.attendees[0].email}</a><br />
+    <br />
+    <strong>Invitee Name:</strong><br />
+    ${evt.attendees[0].name}<br />
     <br />` +
     (
       evt.location ? `
