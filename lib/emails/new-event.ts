@@ -95,6 +95,7 @@ const html = (evt: CalendarEvent) => `
     <br />
     <strong>Additional notes:</strong><br />
     ${evt.description}
+    <br />
   </div>
 `;
 
